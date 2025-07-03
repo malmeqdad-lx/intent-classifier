@@ -72,22 +72,15 @@ export default function IntentClassifierApp() {
 
         console.log('Making API call with key:', config.apiKey ? 'Key present' : 'No key');
         
-        const apiResponse = await fetch('https://api.anthropic.com/v1/messages', {
+        // Use Vercel API route instead of direct API call
+        const apiResponse = await fetch('/api/classify', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': config.apiKey,
-            'anthropic-version': '2023-06-01'
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            model: 'claude-3-sonnet-20240229',
-            max_tokens: 1000,
-            messages: [
-              {
-                role: 'user',
-                content: fullPrompt
-              }
-            ]
+            prompt: fullPrompt,
+            apiKey: config.apiKey
           })
         });
 
