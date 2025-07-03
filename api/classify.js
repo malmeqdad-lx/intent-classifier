@@ -16,18 +16,19 @@ export default async function handler(req, res) {
     }
   
     try {
-      const { prompt, apiKey } = req.body;
-  
-      console.log('API route called with:', { 
-        hasPrompt: !!prompt, 
-        hasApiKey: !!apiKey,
-        apiKeyPrefix: apiKey ? apiKey.substring(0, 15) + '...' : 'none',
-        promptLength: prompt?.length || 0
+      const { prompt } = req.body; // Only need prompt now
+      
+      // Use server-side environment variable
+      const apiKey = process.env.CLAUDE_API_KEY; // Note: no REACT_APP_ prefix
+      
+      console.log('Server API key check:', {
+        hasKey: !!apiKey,
+        keyLength: apiKey?.length || 0
       });
-  
+      
       if (!apiKey) {
-        console.log('Missing API key');
-        return res.status(400).json({ error: 'API key is required' });
+        console.log('Server API key not configured');
+        return res.status(500).json({ error: 'Server API key not configured' });
       }
   
       if (!prompt) {
@@ -35,7 +36,7 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Prompt is required' });
       }
   
-      console.log('Making Claude API call...');
+      console.log('Making Claude API call with server key...');
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -66,14 +67,13 @@ export default async function handler(req, res) {
       }
   
       const data = await response.json();
-      console.log('Claude API success, returning data');
+      console.log('Claude API success');
       res.status(200).json(data);
   
     } catch (error) {
       console.error('Handler error:', error);
       res.status(500).json({ 
-        error: error?.message || 'Internal server error',
-        stack: error?.stack
+        error: error?.message || 'Internal server error'
       });
     }
   }

@@ -65,22 +65,20 @@ export default function IntentClassifierApp() {
       if (window.claude && window.claude.complete) {
         response = await window.claude.complete(fullPrompt);
       } else {
-        // Fallback to direct API call
-        if (!config.apiKey) {
-          throw new Error('Claude API key not configured. Please add your API key in the configuration panel.');
-        }
+        // API key is handled server-side, no need to check here
+        console.log('Making API call...');
 
-        console.log('Making API call with key:', config.apiKey ? 'Key present' : 'No key');
+        console.log('Making API call...');
         
-        // Use Vercel API route instead of direct API call
+        // Use Vercel API route - API key is handled server-side
         const apiResponse = await fetch('/api/classify', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            prompt: fullPrompt,
-            apiKey: config.apiKey
+            prompt: fullPrompt
+            // No API key needed - handled server-side
           })
         });
 
@@ -259,22 +257,7 @@ export default function IntentClassifierApp() {
             <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '16px' }}>Configuration</h2>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
-                  <Key style={{ height: '16px', width: '16px', display: 'inline', marginRight: '4px' }} />
-                  Claude API Key
-                </label>
-                <input
-                  type="password"
-                  value={config.apiKey}
-                  onChange={(e) => setConfig(prev => ({ ...prev, apiKey: e.target.value }))}
-                  placeholder="sk-ant-api03-..."
-                  className="input"
-                />
-                <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
-                  Get your API key from <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer" style={{ color: '#4f46e5' }}>console.anthropic.com</a>
-                </p>
-              </div>
+              {/* Removed API key input - handled server-side */}
 
               <div>
                 <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#374151', marginBottom: '8px' }}>
