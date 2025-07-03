@@ -87,9 +87,9 @@ export default function IntentClassifierApp() {
         console.log('API Response status:', apiResponse.status);
         
         if (!apiResponse.ok) {
-          const errorData = await apiResponse.text();
+          const errorData = await apiResponse.json();
           console.log('API Error details:', errorData);
-          throw new Error(`API Error: ${apiResponse.status} - ${errorData}`);
+          throw new Error(`API Error: ${apiResponse.status} - ${errorData.error || 'Unknown error'}`);
         }
 
         const data = await apiResponse.json();
