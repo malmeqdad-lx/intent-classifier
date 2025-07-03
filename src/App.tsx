@@ -260,7 +260,7 @@ export default function IntentClassifierApp() {
                 <input
                   type="password"
                   value={config.apiKey}
-                  onChange={(e) => updateApiKey(e.target.value)}
+                  onChange={(e) => setConfig(prev => ({ ...prev, apiKey: e.target.value }))}
                   placeholder="sk-ant-api03-..."
                   className="input"
                 />
