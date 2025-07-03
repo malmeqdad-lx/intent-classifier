@@ -39,10 +39,40 @@ Return your response as a valid JSON object in this exact format:
 IMPORTANT: Return ONLY the JSON object, no additional text.`;
 
 export default function IntentClassifierApp() {
+  // Try to load API key from localStorage first, then environment
+  const getInitialApiKey = () => {
+    if (typeof window !== 'undefined') {
+      const savedKey = localStorage.getItem('claude-api-key');
+      if (savedKey) return savedKey;
+    }
+    return process.env.REACT_APP_CLAUDE_API_KEY || '';
+  };
+
   const [config, setConfig] = useState<AppConfig>({
-    apiKey: '',
+    apiKey: getInitialApiKey(),
     context: 'general conversation',
     systemPrompt: DEFAULT_SYSTEM_PROMPT
+  });
+
+  // Save API key to localStorage whenever it changes
+  const updateApiKey = (newKey: string) => {
+    setConfig(prev => ({ ...prev, apiKey: newKey }));
+    if (typeof window !== 'undefined') {
+      if (newKey) {
+        localStorage.setItem('claude-api-key', newKey);
+      } else {
+        localStorage.removeItem('claude-api-key');
+      }
+    }
+  };
+
+  // Debug environment variables
+  console.log('Environment debug:', {
+    nodeEnv: process.env.NODE_ENV,
+    apiKeyExists: !!process.env.REACT_APP_CLAUDE_API_KEY,
+    apiKeyLength: process.env.REACT_APP_CLAUDE_API_KEY?.length || 0,
+    configApiKeyLength: config.apiKey?.length || 0,
+    savedInLocalStorage: typeof window !== 'undefined' ? !!localStorage.getItem('claude-api-key') : false
   });
   
   const [singleUtterance, setSingleUtterance] = useState('');
@@ -53,9 +83,7 @@ export default function IntentClassifierApp() {
   const [batchProgress, setBatchProgress] = useState({ current: 0, total: 0 });
 
   const classifyWithClaude = async (utterance: string): Promise<ClassificationResult> => {
-    const prompt = config.systemPrompt
-      .replace(/{CONTEXT}/g, config.context);
-
+    const prompt = config.systemPrompt.replace(/{CONTEXT}/g, config.context);
     const fullPrompt = `${prompt}\n\nUtterance to classify: "${utterance}"`;
 
     try {
@@ -98,10 +126,8 @@ export default function IntentClassifierApp() {
       
       let parsedResponse;
       try {
-        // Try to parse as JSON
         parsedResponse = JSON.parse(response.trim());
       } catch {
-        // If JSON parsing fails, extract from response
         const jsonMatch = response.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           parsedResponse = JSON.parse(jsonMatch[0]);
@@ -158,7 +184,6 @@ export default function IntentClassifierApp() {
         const result = await classifyWithClaude(utterance);
         batchResults.push(result);
         
-        // Small delay to respect rate limits
         await new Promise(resolve => setTimeout(resolve, 500));
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -186,15 +211,12 @@ export default function IntentClassifierApp() {
       const content = e.target?.result as string;
       
       if (file.name.endsWith('.csv')) {
-        // Simple CSV parsing - assumes one column or first column contains utterances
         const lines = content.split('\n').map(line => line.trim()).filter(line => line);
-        // Skip header if it looks like a header
         const data = lines[0]?.toLowerCase().includes('utterance') || lines[0]?.toLowerCase().includes('text') 
           ? lines.slice(1) 
           : lines;
         setUploadedData(data);
       } else {
-        // For now, treat as plain text with one utterance per line
         const lines = content.split('\n').map(line => line.trim()).filter(line => line);
         setUploadedData(lines);
       }
@@ -260,7 +282,7 @@ export default function IntentClassifierApp() {
                 <input
                   type="password"
                   value={config.apiKey}
-                  onChange={(e) => setConfig(prev => ({ ...prev, apiKey: e.target.value }))}
+                  onChange={(e) => updateApiKey(e.target.value)}
                   placeholder="sk-ant-api03-..."
                   className="input"
                 />
